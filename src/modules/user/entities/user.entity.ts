@@ -1,6 +1,8 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('UserAuth')
+import { Roles } from '../model/role.enum';
+
+@Entity('user_auth')
 export class User {
   @PrimaryGeneratedColumn({ type: 'integer' })
   id: number;
@@ -20,6 +22,10 @@ export class User {
   @Column({ name: 'is_active', default: true, nullable: false })
   isActive: boolean;
 
-  @Column({ type: 'enum', enum: ['admin', 'applicant'] })
-  role: string;
+  @Column({
+    type: 'enum',
+    enum: Roles,
+    array: true,
+  })
+  roles: Roles[];
 }

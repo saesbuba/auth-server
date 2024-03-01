@@ -10,21 +10,33 @@ import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
+import { Response } from '../../models/response-model';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
+  genericResponse: Response<User | NonNullable<unknown>>;
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) {
+    this.genericResponse = {
+      success: true,
+      statusCode: 200,
+      message: '',
+      data: {},
+    };
+  }
 
-  async register(createUserDto: CreateUserDto) {
+  async register(
+    createUserDto: CreateUserDto,
+  ): Promise<Response<User | NonNullable<unknown>>> {
     try {
       const newUserInfo = await this.userService.create(createUserDto);
       return {
-        success: true,
+        ...this.genericResponse,
         statusCode: 201,
-        message: '',
         data: newUserInfo,
       };
     } catch (error) {
@@ -32,43 +44,42 @@ export class AuthService {
     }
   }
 
-  async login(username: string, password: string) {
+  async login(
+    username: string,
+    password: string,
+  ): Promise<Response<User | NonNullable<unknown>>> {
     const user = await this.userService.findOne(username);
 
     if (!user)
       throw new NotFoundException({
+        ...this.genericResponse,
         success: false,
         statusCode: HttpStatus.NOT_FOUND,
         message: 'User not found',
-        data: {},
       });
 
     const isPasswordMatching = await bcrypt.compare(password, user?.password);
 
     if (!isPasswordMatching)
       throw new UnauthorizedException({
+        ...this.genericResponse,
         success: false,
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Unauthorized',
-        data: {},
       });
 
-    const payload = { sub: user.id, username: user.username };
-    const options = {
-      audience: 'http://localhost:8080/nestjs/api/v1',
-      issuer: 'http://localhost:3000/nestjs/auth/',
-      expiresIn: 28800,
-      secret: 'custom-secret-from-env-vars',
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      roles: user.roles,
     };
 
-    const jwt = await this.jwtService.signAsync(payload, options);
+    const jwt = await this.jwtService.signAsync(payload);
     return {
-      success: true,
+      ...this.genericResponse,
       statusCode: 201,
-      message: '',
       data: {
-        jwt: jwt,
-        expiresIn: 28800,
+        accessToken: jwt,
         tokenType: 'Bearer',
       },
     };

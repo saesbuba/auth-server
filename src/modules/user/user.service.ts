@@ -13,7 +13,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { name, username, email, password, role } = createUserDto;
+    const { name, username, email, password, roles } = createUserDto;
 
     const existingUser = await this.userRepository.findOneBy({ username });
 
@@ -32,12 +32,12 @@ export class UserService {
     user.username = username;
     user.email = email;
     user.password = passwordHashed;
-    user.role = role;
+    user.roles = roles;
 
     return await this.userRepository.save(user);
   }
 
-  async findOne(username: string): Promise<User> {
+  async findOne(username: string): Promise<User | null> {
     return await this.userRepository.findOneBy({ username });
   }
 }

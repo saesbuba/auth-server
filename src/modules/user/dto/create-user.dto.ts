@@ -1,5 +1,6 @@
 import {
   IsAlphanumeric,
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -8,8 +9,10 @@ import {
   MinLength,
 } from 'class-validator';
 
+import { Roles } from '../model/role.enum';
+
 const passwordRegEx =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*?[0-9])(?=.*[@$!%*?&])[A-Za-zd@$!%*?&].{8,20}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*?[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&].{8,20}$/;
 
 export class CreateUserDto {
   @IsString()
@@ -39,6 +42,7 @@ export class CreateUserDto {
   password: string;
 
   @IsNotEmpty()
-  @IsEnum(['admin', 'applicant'])
-  role: string;
+  @IsEnum(Roles, { each: true })
+  @IsArray()
+  roles: Roles[];
 }
